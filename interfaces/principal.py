@@ -6,6 +6,7 @@ from interfaces.editoriales import EditorialesFrame
 from interfaces.categorias import CategoriasFrame
 from interfaces.socios import SociosFrame
 from interfaces.prestamos import PrestamosFrame
+from interfaces.empleados import EmpleadosFrame
 
 class Principal:
 
@@ -77,6 +78,12 @@ class Principal:
             self.menu,
             text="Préstamos",
             command=self.vista_prestamos
+        ).pack(fill="x", padx=15, pady=5)
+
+        ctk.CTkButton(
+            self.menu,
+            text="Empleados",
+            command=self.vista_empleados
         ).pack(fill="x", padx=15, pady=5)
 
         ctk.CTkButton(
@@ -169,3 +176,6 @@ class Principal:
             text="Gestión de Préstamos",
             font=("Arial", 20)
         ).pack(pady=20)
+
+    def vista_empleados(self):
+        self.mostrar_frame(EmpleadosFrame)
