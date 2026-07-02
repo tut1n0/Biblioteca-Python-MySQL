@@ -205,3 +205,30 @@ def eliminar_libro(id_libro):
 
         cursor.close()
         conexion.close()
+
+def obtener_libros_combo():
+    conexion = conectar()
+
+    if conexion is None:
+        return []
+
+    try:
+        cursor = conexion.cursor()
+
+        cursor.execute("""
+            SELECT
+                id_libro,
+                titulo
+            FROM libros
+            ORDER BY titulo
+        """)
+
+        return cursor.fetchall()
+
+    except Exception as e:
+        print("Error:", e)
+        return []
+
+    finally:
+        cursor.close()
+        conexion.close()

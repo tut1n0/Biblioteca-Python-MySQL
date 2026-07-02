@@ -4,6 +4,8 @@ from interfaces.libros import LibrosFrame
 from interfaces.autores import AutoresFrame
 from interfaces.editoriales import EditorialesFrame
 from interfaces.categorias import CategoriasFrame
+from interfaces.socios import SociosFrame
+from interfaces.prestamos import PrestamosFrame
 
 class Principal:
 
@@ -150,7 +152,7 @@ class Principal:
 
     def vista_socios(self):
 
-        self.limpiar_area()
+        self.mostrar_frame(SociosFrame)
 
         ctk.CTkLabel(
             self.area,
@@ -160,7 +162,7 @@ class Principal:
 
     def vista_prestamos(self):
 
-        self.limpiar_area()
+        self.mostrar_frame(PrestamosFrame)
 
         ctk.CTkLabel(
             self.area,
