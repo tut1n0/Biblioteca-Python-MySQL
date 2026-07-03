@@ -19,6 +19,7 @@ class LibrosFrame(ctk.CTkFrame):
         super().__init__(master)
 
         self.id_libro = None
+        self.libros_cache = []
 
         self.pack(
             fill="both",
@@ -44,6 +45,34 @@ class LibrosFrame(ctk.CTkFrame):
             text="Gestión de Libros",
             font=("Arial", 24, "bold")
         ).pack(pady=15)
+
+        # ===========================
+        # BÚSQUEDA
+        # ===========================
+
+        busqueda_frame = ctk.CTkFrame(self)
+        busqueda_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+        ctk.CTkLabel(
+            busqueda_frame,
+            text="Buscar libros"
+        ).grid(row=0, column=0, padx=(10, 5), pady=5, sticky="w")
+
+        self.busqueda_libros = ctk.CTkEntry(
+            busqueda_frame,
+            placeholder_text="Título, ISBN, autor, editorial o categoría"
+        )
+        self.busqueda_libros.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        busqueda_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkButton(
+            busqueda_frame,
+            text="Limpiar",
+            width=90,
+            command=self.limpiar_busqueda
+        ).grid(row=0, column=2, padx=5, pady=5)
+
+        self.busqueda_libros.bind("<KeyRelease>", self.filtrar_libros)
 
         # ===========================
         # Formulario
@@ -470,10 +499,12 @@ class LibrosFrame(ctk.CTkFrame):
     def cargar_libros(self):
         """Carga los libros en la tabla."""
 
+        self.libros_cache = obtener_libros()
+        self._actualizar_tabla_libros(self.libros_cache)
+
+    def _actualizar_tabla_libros(self, libros):
         for fila in self.tabla.get_children():
             self.tabla.delete(fila)
-
-        libros = obtener_libros()
 
         for libro in libros:
             self.tabla.insert(
@@ -481,6 +512,24 @@ class LibrosFrame(ctk.CTkFrame):
                 "end",
                 values=libro
             )
+
+    def filtrar_libros(self, event=None):
+        texto = self.busqueda_libros.get().strip().lower()
+
+        if texto == "":
+            self._actualizar_tabla_libros(self.libros_cache)
+            return
+
+        filtrados = [
+            libro for libro in self.libros_cache
+            if texto in " ".join(map(str, libro)).lower()
+        ]
+
+        self._actualizar_tabla_libros(filtrados)
+
+    def limpiar_busqueda(self):
+        self.busqueda_libros.delete(0, "end")
+        self.filtrar_libros()
     
     def guardar(self):
 

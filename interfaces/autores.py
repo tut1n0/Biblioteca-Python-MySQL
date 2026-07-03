@@ -15,6 +15,7 @@ class AutoresFrame(ctk.CTkFrame):
         super().__init__(master)
 
         self.id_autor = None
+        self.autores_cache = []
 
         self.pack(
             fill="both",
@@ -32,6 +33,34 @@ class AutoresFrame(ctk.CTkFrame):
             text="Gestión de Autores",
             font=("Arial", 24, "bold")
         ).pack(pady=15)
+
+        # ===============================
+        # BÚSQUEDA
+        # ===============================
+
+        busqueda_frame = ctk.CTkFrame(self)
+        busqueda_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+        ctk.CTkLabel(
+            busqueda_frame,
+            text="Buscar autores"
+        ).grid(row=0, column=0, padx=(10, 5), pady=5, sticky="w")
+
+        self.busqueda_autor = ctk.CTkEntry(
+            busqueda_frame,
+            placeholder_text="Nombre, nacionalidad o ID"
+        )
+        self.busqueda_autor.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        busqueda_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkButton(
+            busqueda_frame,
+            text="Limpiar",
+            width=90,
+            command=self.limpiar_busqueda
+        ).grid(row=0, column=2, padx=5, pady=5)
+
+        self.busqueda_autor.bind("<KeyRelease>", self.filtrar_autores)
 
         # ===============================
         # FORMULARIO
@@ -206,13 +235,33 @@ class AutoresFrame(ctk.CTkFrame):
     def cargar_autores(self):
         """Carga todos los autores en la tabla."""
 
+        self.autores_cache = obtener_autores()
+        self._actualizar_tabla_autores(self.autores_cache)
+
+    def _actualizar_tabla_autores(self, autores):
         for fila in self.tabla.get_children():
             self.tabla.delete(fila)
 
-        autores = obtener_autores()
-
         for autor in autores:
             self.tabla.insert("", "end", values=autor)
+
+    def filtrar_autores(self, event=None):
+        texto = self.busqueda_autor.get().strip().lower()
+
+        if texto == "":
+            self._actualizar_tabla_autores(self.autores_cache)
+            return
+
+        filtrados = [
+            autor for autor in self.autores_cache
+            if texto in " ".join(map(str, autor)).lower()
+        ]
+
+        self._actualizar_tabla_autores(filtrados)
+
+    def limpiar_busqueda(self):
+        self.busqueda_autor.delete(0, "end")
+        self.filtrar_autores()
 
     def guardar(self):
 

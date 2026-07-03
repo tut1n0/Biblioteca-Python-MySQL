@@ -1,5 +1,9 @@
 import customtkinter as ctk
 
+from controladores.libro_controller import obtener_libros
+from controladores.socio_controller import obtener_socios
+from controladores.prestamo_controller import obtener_prestamos_activos
+
 from interfaces.libros import LibrosFrame, LibrosCatalogoFrame
 from interfaces.autores import AutoresFrame
 from interfaces.editoriales import EditorialesFrame
@@ -12,14 +16,14 @@ from interfaces.empleados import EmpleadosFrame
 class Principal:
 
     def __init__(self):
-        ctk.set_appearance_mode("light")
+        ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("blue")
 
         self.ventana = ctk.CTk()
-
         self.ventana.title("Sistema Biblioteca")
         self.ventana.geometry("1100x650")
         self.ventana.minsize(1000, 600)
+        self.ventana.configure(fg_color="#0f172a")
 
         self.crear_menu()
         self.crear_area_principal()
@@ -29,9 +33,9 @@ class Principal:
     def crear_menu(self):
         self.menu = ctk.CTkFrame(
             self.ventana,
-            width=220,
+            width=240,
             corner_radius=0,
-            fg_color="#1f4e79"
+            fg_color="#111827"
         )
 
         self.menu.pack(
@@ -98,7 +102,7 @@ class Principal:
     def crear_area_principal(self):
         self.area = ctk.CTkFrame(
             self.ventana,
-            fg_color="#f3f6fb",
+            fg_color="#0f172a",
             corner_radius=0
         )
 
@@ -138,8 +142,39 @@ class Principal:
             contenedor,
             text="Administrá libros, socios, préstamos y usuarios desde un solo panel.",
             font=("Arial", 15),
-            text_color="#4b5563"
+            text_color="#cbd5e1"
         ).pack(anchor="w", pady=(0, 30))
+
+        indicadores = ctk.CTkFrame(
+            contenedor,
+            fg_color="#111827",
+            corner_radius=20
+        )
+        indicadores.pack(fill="x", pady=(0, 20), padx=4)
+
+        self.crear_tarjeta_estadistica(
+            indicadores,
+            "Libros",
+            len(obtener_libros()),
+            "Total de libros registrados",
+            0
+        )
+
+        self.crear_tarjeta_estadistica(
+            indicadores,
+            "Socios",
+            len(obtener_socios()),
+            "Total de socios activos",
+            1
+        )
+
+        self.crear_tarjeta_estadistica(
+            indicadores,
+            "Préstamos",
+            len(obtener_prestamos_activos()),
+            "Préstamos en circulación",
+            2
+        )
 
         tarjetas = ctk.CTkFrame(
             contenedor,
@@ -164,18 +199,11 @@ class Principal:
             "Ver préstamos"
         )
 
-        self.crear_tarjeta_resumen(
-            tarjetas,
-            "Administración",
-            "Empleados y acceso al sistema.",
-            2
-        )
-
     def crear_tarjeta_resumen(self, master, titulo, texto, columna, comando=None, boton_texto="Ver libros"):
         tarjeta = ctk.CTkFrame(
             master,
-            corner_radius=10,
-            fg_color="white"
+            corner_radius=20,
+            fg_color="#111827"
         )
 
         tarjeta.grid(
@@ -192,14 +220,14 @@ class Principal:
             tarjeta,
             text=titulo,
             font=("Arial", 18, "bold"),
-            text_color="#1f4e79"
+            text_color="white"
         ).pack(anchor="w", padx=20, pady=(20, 8))
 
         ctk.CTkLabel(
             tarjeta,
             text=texto,
             font=("Arial", 13),
-            text_color="#555555",
+            text_color="#cbd5e1",
             wraplength=230,
             justify="left"
         ).pack(anchor="w", padx=20, pady=(0, 22))
@@ -208,11 +236,52 @@ class Principal:
             ctk.CTkButton(
                 tarjeta,
                 text=boton_texto,
-                fg_color="#1e40af",
-                hover_color="#2563eb",
+                fg_color="#2563eb",
+                hover_color="#1e40af",
                 text_color="white",
+                corner_radius=12,
                 command=comando
             ).pack(padx=20, pady=(0, 20), fill="x")
+
+    def crear_tarjeta_estadistica(self, master, titulo, valor, texto, columna):
+        estadistica = ctk.CTkFrame(
+            master,
+            fg_color="#0f172a",
+            corner_radius=20
+        )
+
+        estadistica.grid(
+            row=0,
+            column=columna,
+            padx=8,
+            pady=8,
+            sticky="nsew"
+        )
+
+        master.grid_columnconfigure(columna, weight=1)
+
+        ctk.CTkLabel(
+            estadistica,
+            text=titulo,
+            font=("Arial", 13, "bold"),
+            text_color="#60a5fa"
+        ).pack(anchor="w", padx=18, pady=(20, 4))
+
+        ctk.CTkLabel(
+            estadistica,
+            text=str(valor),
+            font=("Arial", 28, "bold"),
+            text_color="white"
+        ).pack(anchor="w", padx=18)
+
+        ctk.CTkLabel(
+            estadistica,
+            text=texto,
+            font=("Arial", 12),
+            text_color="#94a3b8",
+            wraplength=240,
+            justify="left"
+        ).pack(anchor="w", padx=18, pady=(8, 16))
 
     def vista_libros(self):
         self.mostrar_frame(LibrosFrame)

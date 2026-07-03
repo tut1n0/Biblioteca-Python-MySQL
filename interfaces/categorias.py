@@ -14,6 +14,7 @@ class CategoriasFrame(ctk.CTkFrame):
         super().__init__(master)
 
         self.id_categoria = None
+        self.categorias_cache = []
 
         self.pack(
             fill="both",
@@ -31,6 +32,34 @@ class CategoriasFrame(ctk.CTkFrame):
             text="Gestión de Categorías",
             font=("Arial", 24, "bold")
         ).pack(pady=15)
+
+        # ===============================
+        # BÚSQUEDA
+        # ===============================
+
+        busqueda_frame = ctk.CTkFrame(self)
+        busqueda_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+        ctk.CTkLabel(
+            busqueda_frame,
+            text="Buscar categorías"
+        ).grid(row=0, column=0, padx=(10, 5), pady=5, sticky="w")
+
+        self.busqueda_categoria = ctk.CTkEntry(
+            busqueda_frame,
+            placeholder_text="Nombre o ID"
+        )
+        self.busqueda_categoria.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        busqueda_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkButton(
+            busqueda_frame,
+            text="Limpiar",
+            width=90,
+            command=self.limpiar_busqueda
+        ).grid(row=0, column=2, padx=5, pady=5)
+
+        self.busqueda_categoria.bind("<KeyRelease>", self.filtrar_categorias)
 
         # ===============================
         # FORMULARIO
@@ -196,13 +225,33 @@ class CategoriasFrame(ctk.CTkFrame):
     def cargar_categorias(self):
         """Carga todas las categorías en la tabla."""
 
+        self.categorias_cache = obtener_categorias()
+        self._actualizar_tabla_categorias(self.categorias_cache)
+
+    def _actualizar_tabla_categorias(self, categorias):
         for fila in self.tabla.get_children():
             self.tabla.delete(fila)
 
-        categorias = obtener_categorias()
-
         for categoria in categorias:
             self.tabla.insert("", "end", values=categoria)
+
+    def filtrar_categorias(self, event=None):
+        texto = self.busqueda_categoria.get().strip().lower()
+
+        if texto == "":
+            self._actualizar_tabla_categorias(self.categorias_cache)
+            return
+
+        filtrados = [
+            categoria for categoria in self.categorias_cache
+            if texto in " ".join(map(str, categoria)).lower()
+        ]
+
+        self._actualizar_tabla_categorias(filtrados)
+
+    def limpiar_busqueda(self):
+        self.busqueda_categoria.delete(0, "end")
+        self.filtrar_categorias()
 
     def guardar(self):
 

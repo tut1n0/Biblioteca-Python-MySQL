@@ -15,6 +15,7 @@ class EmpleadosFrame(ctk.CTkFrame):
         super().__init__(master)
 
         self.id_empleado = None
+        self.empleados_cache = []
 
         self.pack(fill="both", expand=True, padx=20, pady=20)
 
@@ -23,6 +24,34 @@ class EmpleadosFrame(ctk.CTkFrame):
             text="Gestión de Empleados",
             font=("Arial", 24, "bold")
         ).pack(pady=15)
+
+        # ===============================
+        # BÚSQUEDA
+        # ===============================
+
+        busqueda_frame = ctk.CTkFrame(self)
+        busqueda_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+        ctk.CTkLabel(
+            busqueda_frame,
+            text="Buscar empleados"
+        ).grid(row=0, column=0, padx=(10, 5), pady=5, sticky="w")
+
+        self.busqueda_empleado = ctk.CTkEntry(
+            busqueda_frame,
+            placeholder_text="Nombre, usuario o ID"
+        )
+        self.busqueda_empleado.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        busqueda_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkButton(
+            busqueda_frame,
+            text="Limpiar",
+            width=90,
+            command=self.limpiar_busqueda
+        ).grid(row=0, column=2, padx=5, pady=5)
+
+        self.busqueda_empleado.bind("<KeyRelease>", self.filtrar_empleados)
 
         formulario = ctk.CTkFrame(self)
         formulario.pack(fill="x", padx=20, pady=10)
@@ -112,6 +141,52 @@ class EmpleadosFrame(ctk.CTkFrame):
 
         self.cargar_empleados()
 
+    def cargar_empleados(self):
+        for fila in self.tabla.get_children():
+            self.tabla.delete(fila)
+
+        self.empleados_cache = obtener_empleados()
+
+        for empleado in self.empleados_cache:
+            display_values = (
+                empleado[0],
+                empleado[1],
+                empleado[2],
+                "********"
+            )
+            self.tabla.insert("", "end", values=display_values)
+
+    def _actualizar_tabla_empleados(self, empleados):
+        for fila in self.tabla.get_children():
+            self.tabla.delete(fila)
+
+        for empleado in empleados:
+            display_values = (
+                empleado[0],
+                empleado[1],
+                empleado[2],
+                "********"
+            )
+            self.tabla.insert("", "end", values=display_values)
+
+    def filtrar_empleados(self, event=None):
+        texto = self.busqueda_empleado.get().strip().lower()
+
+        if texto == "":
+            self._actualizar_tabla_empleados(self.empleados_cache)
+            return
+
+        filtrados = [
+            empleado for empleado in self.empleados_cache
+            if texto in " ".join(map(str, empleado)).lower()
+        ]
+
+        self._actualizar_tabla_empleados(filtrados)
+
+    def limpiar_busqueda(self):
+        self.busqueda_empleado.delete(0, "end")
+        self.filtrar_empleados()
+
     def nuevo(self):
         self.id_empleado = None
 
@@ -124,15 +199,6 @@ class EmpleadosFrame(ctk.CTkFrame):
         self.btn_eliminar.configure(state="disabled")
 
         self.nombre.focus()
-
-    def cargar_empleados(self):
-        for fila in self.tabla.get_children():
-            self.tabla.delete(fila)
-
-        empleados = obtener_empleados()
-
-        for empleado in empleados:
-            self.tabla.insert("", "end", values=empleado)
 
     def guardar(self):
         nombre = self.nombre.get().strip()
@@ -184,17 +250,24 @@ class EmpleadosFrame(ctk.CTkFrame):
             return
 
         valores = self.tabla.item(seleccion[0], "values")
-
         self.id_empleado = valores[0]
 
+        empleado = next(
+            (e for e in self.empleados_cache if str(e[0]) == str(self.id_empleado)),
+            None
+        )
+
+        if empleado is None:
+            return
+
         self.nombre.delete(0, "end")
-        self.nombre.insert(0, valores[1])
+        self.nombre.insert(0, empleado[1])
 
         self.usuario.delete(0, "end")
-        self.usuario.insert(0, valores[2])
+        self.usuario.insert(0, empleado[2])
 
         self.password.delete(0, "end")
-        self.password.insert(0, valores[3])
+        self.password.insert(0, empleado[3])
 
         self.btn_guardar.configure(state="disabled")
         self.btn_modificar.configure(state="normal")

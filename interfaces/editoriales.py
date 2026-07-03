@@ -15,6 +15,7 @@ class EditorialesFrame(ctk.CTkFrame):
         super().__init__(master)
 
         self.id_editorial = None
+        self.editoriales_cache = []
 
         self.pack(
             fill="both",
@@ -32,6 +33,34 @@ class EditorialesFrame(ctk.CTkFrame):
             text="Gestión de Editoriales",
             font=("Arial", 24, "bold")
         ).pack(pady=15)
+
+        # ===============================
+        # BÚSQUEDA
+        # ===============================
+
+        busqueda_frame = ctk.CTkFrame(self)
+        busqueda_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+        ctk.CTkLabel(
+            busqueda_frame,
+            text="Buscar editoriales"
+        ).grid(row=0, column=0, padx=(10, 5), pady=5, sticky="w")
+
+        self.busqueda_editorial = ctk.CTkEntry(
+            busqueda_frame,
+            placeholder_text="Nombre o ID"
+        )
+        self.busqueda_editorial.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        busqueda_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkButton(
+            busqueda_frame,
+            text="Limpiar",
+            width=90,
+            command=self.limpiar_busqueda
+        ).grid(row=0, column=2, padx=5, pady=5)
+
+        self.busqueda_editorial.bind("<KeyRelease>", self.filtrar_editoriales)
 
         # ===============================
         # FORMULARIO
@@ -197,13 +226,33 @@ class EditorialesFrame(ctk.CTkFrame):
     def cargar_editoriales(self):
         """Carga todas las editoriales en la tabla."""
 
+        self.editoriales_cache = obtener_editoriales()
+        self._actualizar_tabla_editoriales(self.editoriales_cache)
+
+    def _actualizar_tabla_editoriales(self, editoriales):
         for fila in self.tabla.get_children():
             self.tabla.delete(fila)
 
-        editoriales = obtener_editoriales()
-
         for editorial in editoriales:
             self.tabla.insert("", "end", values=editorial)
+
+    def filtrar_editoriales(self, event=None):
+        texto = self.busqueda_editorial.get().strip().lower()
+
+        if texto == "":
+            self._actualizar_tabla_editoriales(self.editoriales_cache)
+            return
+
+        filtrados = [
+            editorial for editorial in self.editoriales_cache
+            if texto in " ".join(map(str, editorial)).lower()
+        ]
+
+        self._actualizar_tabla_editoriales(filtrados)
+
+    def limpiar_busqueda(self):
+        self.busqueda_editorial.delete(0, "end")
+        self.filtrar_editoriales()
 
     def guardar(self):
 

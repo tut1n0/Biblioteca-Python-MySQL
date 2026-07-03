@@ -25,6 +25,7 @@ class PrestamosFrame(ctk.CTkFrame):
         self.socios = {}
         self.empleados = {}
         self.libros = {}
+        self.prestamos_cache = []
 
         self.pack(fill="both", expand=True, padx=20, pady=20)
 
@@ -33,6 +34,34 @@ class PrestamosFrame(ctk.CTkFrame):
             text="Gestión de Préstamos",
             font=("Arial", 24, "bold")
         ).pack(pady=15)
+
+        # ===============================
+        # BÚSQUEDA
+        # ===============================
+
+        busqueda_frame = ctk.CTkFrame(self)
+        busqueda_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+        ctk.CTkLabel(
+            busqueda_frame,
+            text="Buscar préstamos"
+        ).grid(row=0, column=0, padx=(10, 5), pady=5, sticky="w")
+
+        self.busqueda_prestamo = ctk.CTkEntry(
+            busqueda_frame,
+            placeholder_text="Socio, libro, empleado, estado o fechas"
+        )
+        self.busqueda_prestamo.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        busqueda_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkButton(
+            busqueda_frame,
+            text="Limpiar",
+            width=90,
+            command=self.limpiar_busqueda
+        ).grid(row=0, column=2, padx=5, pady=5)
+
+        self.busqueda_prestamo.bind("<KeyRelease>", self.filtrar_prestamos)
 
         formulario = ctk.CTkFrame(self)
         formulario.pack(fill="x", padx=20, pady=10)
@@ -169,6 +198,40 @@ class PrestamosFrame(ctk.CTkFrame):
         self.cargar_prestamos()
         self.nuevo()
 
+    def cargar_prestamos(self):
+        for fila in self.tabla.get_children():
+            self.tabla.delete(fila)
+
+        self.prestamos_cache = obtener_prestamos()
+
+        for prestamo in self.prestamos_cache:
+            self.tabla.insert("", "end", values=prestamo)
+
+    def _actualizar_tabla_prestamos(self, prestamos):
+        for fila in self.tabla.get_children():
+            self.tabla.delete(fila)
+
+        for prestamo in prestamos:
+            self.tabla.insert("", "end", values=prestamo)
+
+    def filtrar_prestamos(self, event=None):
+        texto = self.busqueda_prestamo.get().strip().lower()
+
+        if texto == "":
+            self._actualizar_tabla_prestamos(self.prestamos_cache)
+            return
+
+        filtrados = [
+            prestamo for prestamo in self.prestamos_cache
+            if texto in " ".join(map(str, prestamo)).lower()
+        ]
+
+        self._actualizar_tabla_prestamos(filtrados)
+
+    def limpiar_busqueda(self):
+        self.busqueda_prestamo.delete(0, "end")
+        self.filtrar_prestamos()
+
     def cargar_combos(self):
         socios = obtener_socios_combo()
         self.socios.clear()
@@ -211,15 +274,6 @@ class PrestamosFrame(ctk.CTkFrame):
 
         if titulos_libros:
             self.combo_libro.set(titulos_libros[0])
-
-    def cargar_prestamos(self):
-        for fila in self.tabla.get_children():
-            self.tabla.delete(fila)
-
-        prestamos = obtener_prestamos()
-
-        for prestamo in prestamos:
-            self.tabla.insert("", "end", values=prestamo)
 
     def nuevo(self):
         self.id_prestamo = None
@@ -418,6 +472,8 @@ class PrestamosCirculacionFrame(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
 
+        self.prestamos_activos_cache = []
+
         self.pack(fill="both", expand=True, padx=20, pady=20)
 
         ctk.CTkLabel(
@@ -425,6 +481,30 @@ class PrestamosCirculacionFrame(ctk.CTkFrame):
             text="Préstamos en Circulación",
             font=("Arial", 24, "bold")
         ).pack(pady=15)
+
+        busqueda_frame = ctk.CTkFrame(self)
+        busqueda_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+        ctk.CTkLabel(
+            busqueda_frame,
+            text="Buscar en circulación"
+        ).grid(row=0, column=0, padx=(10, 5), pady=5, sticky="w")
+
+        self.busqueda_circulacion = ctk.CTkEntry(
+            busqueda_frame,
+            placeholder_text="Socio, libro o fechas"
+        )
+        self.busqueda_circulacion.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        busqueda_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkButton(
+            busqueda_frame,
+            text="Limpiar",
+            width=90,
+            command=self.limpiar_busqueda
+        ).grid(row=0, column=2, padx=5, pady=5)
+
+        self.busqueda_circulacion.bind("<KeyRelease>", self.filtrar_prestamos_activos)
 
         self.tabla = ttk.Treeview(
             self,
@@ -456,10 +536,30 @@ class PrestamosCirculacionFrame(ctk.CTkFrame):
         self.cargar_prestamos_activos()
 
     def cargar_prestamos_activos(self):
+        self.prestamos_activos_cache = obtener_prestamos_activos()
+        self._actualizar_tabla_prestamos_activos(self.prestamos_activos_cache)
+
+    def _actualizar_tabla_prestamos_activos(self, prestamos):
         for fila in self.tabla.get_children():
             self.tabla.delete(fila)
 
-        prestamos = obtener_prestamos_activos()
-
         for prestamo in prestamos:
             self.tabla.insert("", "end", values=prestamo)
+
+    def filtrar_prestamos_activos(self, event=None):
+        texto = self.busqueda_circulacion.get().strip().lower()
+
+        if texto == "":
+            self._actualizar_tabla_prestamos_activos(self.prestamos_activos_cache)
+            return
+
+        filtrados = [
+            prestamo for prestamo in self.prestamos_activos_cache
+            if texto in " ".join(map(str, prestamo)).lower()
+        ]
+
+        self._actualizar_tabla_prestamos_activos(filtrados)
+
+    def limpiar_busqueda(self):
+        self.busqueda_circulacion.delete(0, "end")
+        self.filtrar_prestamos_activos()

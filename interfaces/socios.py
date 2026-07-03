@@ -15,6 +15,7 @@ class SociosFrame(ctk.CTkFrame):
         super().__init__(master)
 
         self.id_socio = None
+        self.socios_cache = []
 
         self.pack(fill="both", expand=True, padx=20, pady=20)
 
@@ -23,6 +24,34 @@ class SociosFrame(ctk.CTkFrame):
             text="Gestión de Socios",
             font=("Arial", 24, "bold")
         ).pack(pady=15)
+
+        # ===============================
+        # BÚSQUEDA
+        # ===============================
+
+        busqueda_frame = ctk.CTkFrame(self)
+        busqueda_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+        ctk.CTkLabel(
+            busqueda_frame,
+            text="Buscar socios"
+        ).grid(row=0, column=0, padx=(10, 5), pady=5, sticky="w")
+
+        self.busqueda_socio = ctk.CTkEntry(
+            busqueda_frame,
+            placeholder_text="Nombre, apellido, DNI o email"
+        )
+        self.busqueda_socio.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        busqueda_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkButton(
+            busqueda_frame,
+            text="Limpiar",
+            width=90,
+            command=self.limpiar_busqueda
+        ).grid(row=0, column=2, padx=5, pady=5)
+
+        self.busqueda_socio.bind("<KeyRelease>", self.filtrar_socios)
 
         formulario = ctk.CTkFrame(self)
         formulario.pack(fill="x", padx=20, pady=10)
@@ -125,6 +154,40 @@ class SociosFrame(ctk.CTkFrame):
 
         self.cargar_socios()
 
+    def cargar_socios(self):
+        for fila in self.tabla.get_children():
+            self.tabla.delete(fila)
+
+        self.socios_cache = obtener_socios()
+
+        for socio in self.socios_cache:
+            self.tabla.insert("", "end", values=socio)
+
+    def _actualizar_tabla_socios(self, socios):
+        for fila in self.tabla.get_children():
+            self.tabla.delete(fila)
+
+        for socio in socios:
+            self.tabla.insert("", "end", values=socio)
+
+    def filtrar_socios(self, event=None):
+        texto = self.busqueda_socio.get().strip().lower()
+
+        if texto == "":
+            self._actualizar_tabla_socios(self.socios_cache)
+            return
+
+        filtrados = [
+            socio for socio in self.socios_cache
+            if texto in " ".join(map(str, socio)).lower()
+        ]
+
+        self._actualizar_tabla_socios(filtrados)
+
+    def limpiar_busqueda(self):
+        self.busqueda_socio.delete(0, "end")
+        self.filtrar_socios()
+
     def nuevo(self):
         self.id_socio = None
 
@@ -140,15 +203,6 @@ class SociosFrame(ctk.CTkFrame):
         self.btn_eliminar.configure(state="disabled")
 
         self.nombre.focus()
-
-    def cargar_socios(self):
-        for fila in self.tabla.get_children():
-            self.tabla.delete(fila)
-
-        socios = obtener_socios()
-
-        for socio in socios:
-            self.tabla.insert("", "end", values=socio)
 
     def guardar(self):
         nombre = self.nombre.get().strip()
