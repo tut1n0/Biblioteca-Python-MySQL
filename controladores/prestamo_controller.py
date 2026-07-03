@@ -142,6 +142,45 @@ def obtener_prestamos():
         conexion.close()
 
 
+def obtener_prestamos_activos():
+    conexion = conectar()
+
+    if conexion is None:
+        return []
+
+    try:
+        cursor = conexion.cursor()
+
+        cursor.execute("""
+            SELECT
+                p.id_prestamo,
+                CONCAT(s.nombre, ' ', s.apellido) AS socio,
+                l.titulo AS libro,
+                p.fecha_prestamo,
+                p.fecha_devolucion
+            FROM prestamos p
+
+            LEFT JOIN socios s
+                ON p.id_socio = s.id_socio
+
+            LEFT JOIN libros l
+                ON p.id_libro = l.id_libro
+
+            WHERE p.estado = 'Prestado'
+            ORDER BY p.fecha_prestamo DESC
+        """)
+
+        return cursor.fetchall()
+
+    except Exception as e:
+        print("Error:", e)
+        return []
+
+    finally:
+        cursor.close()
+        conexion.close()
+
+
 def obtener_prestamo_por_id(cursor, id_prestamo):
     cursor.execute("""
         SELECT

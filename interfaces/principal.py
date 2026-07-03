@@ -5,7 +5,7 @@ from interfaces.autores import AutoresFrame
 from interfaces.editoriales import EditorialesFrame
 from interfaces.categorias import CategoriasFrame
 from interfaces.socios import SociosFrame
-from interfaces.prestamos import PrestamosFrame
+from interfaces.prestamos import PrestamosFrame, PrestamosCirculacionFrame
 from interfaces.empleados import EmpleadosFrame
 
 
@@ -159,7 +159,9 @@ class Principal:
             tarjetas,
             "Circulación",
             "Socios, préstamos y control de stock.",
-            1
+            1,
+            self.vista_circulacion,
+            "Ver préstamos"
         )
 
         self.crear_tarjeta_resumen(
@@ -169,7 +171,7 @@ class Principal:
             2
         )
 
-    def crear_tarjeta_resumen(self, master, titulo, texto, columna, comando=None):
+    def crear_tarjeta_resumen(self, master, titulo, texto, columna, comando=None, boton_texto="Ver libros"):
         tarjeta = ctk.CTkFrame(
             master,
             corner_radius=10,
@@ -205,7 +207,7 @@ class Principal:
         if comando:
             ctk.CTkButton(
                 tarjeta,
-                text="Ver libros",
+                text=boton_texto,
                 fg_color="#1e40af",
                 hover_color="#2563eb",
                 text_color="white",
@@ -217,6 +219,9 @@ class Principal:
 
     def vista_catalogo(self):
         self.mostrar_frame(LibrosCatalogoFrame)
+
+    def vista_circulacion(self):
+        self.mostrar_frame(PrestamosCirculacionFrame)
 
     def vista_autores(self):
         self.mostrar_frame(AutoresFrame)

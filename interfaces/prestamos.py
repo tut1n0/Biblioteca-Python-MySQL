@@ -5,6 +5,7 @@ from datetime import date
 from controladores.prestamo_controller import (
     guardar_prestamo,
     obtener_prestamos,
+    obtener_prestamos_activos,
     actualizar_prestamo,
     eliminar_prestamo
 )
@@ -410,3 +411,55 @@ class PrestamosFrame(ctk.CTkFrame):
                 "Error",
                 "No fue posible eliminar el préstamo."
             )
+
+
+class PrestamosCirculacionFrame(ctk.CTkFrame):
+
+    def __init__(self, master):
+        super().__init__(master)
+
+        self.pack(fill="both", expand=True, padx=20, pady=20)
+
+        ctk.CTkLabel(
+            self,
+            text="Préstamos en Circulación",
+            font=("Arial", 24, "bold")
+        ).pack(pady=15)
+
+        self.tabla = ttk.Treeview(
+            self,
+            columns=(
+                "id",
+                "socio",
+                "libro",
+                "fecha_prestamo",
+                "fecha_devolucion"
+            ),
+            show="headings",
+            height=16
+        )
+
+        columnas = {
+            "id": ("ID", 60),
+            "socio": ("Socio", 220),
+            "libro": ("Libro", 260),
+            "fecha_prestamo": ("Fecha préstamo", 140),
+            "fecha_devolucion": ("Fecha devolución", 140)
+        }
+
+        for columna, (texto, ancho) in columnas.items():
+            self.tabla.heading(columna, text=texto)
+            self.tabla.column(columna, width=ancho, anchor="center")
+
+        self.tabla.pack(fill="both", expand=True, padx=20, pady=10)
+
+        self.cargar_prestamos_activos()
+
+    def cargar_prestamos_activos(self):
+        for fila in self.tabla.get_children():
+            self.tabla.delete(fila)
+
+        prestamos = obtener_prestamos_activos()
+
+        for prestamo in prestamos:
+            self.tabla.insert("", "end", values=prestamo)
