@@ -659,3 +659,84 @@ class LibrosFrame(ctk.CTkFrame):
                 "Error",
                 "No fue posible eliminar el libro."
             )
+
+
+class LibrosCatalogoFrame(ctk.CTkFrame):
+
+    def __init__(self, master):
+        super().__init__(master)
+
+        self.pack(
+            fill="both",
+            expand=True,
+            padx=20,
+            pady=20
+        )
+
+        ctk.CTkLabel(
+            self,
+            text="Catálogo de Libros",
+            font=("Arial", 24, "bold")
+        ).pack(pady=15)
+
+        self.tabla = ttk.Treeview(
+            self,
+            columns=(
+                "id",
+                "titulo",
+                "isbn",
+                "anio",
+                "stock",
+                "autor",
+                "editorial",
+                "categoria"
+            ),
+            show="headings",
+            height=16
+        )
+
+        columnas = {
+            "id": ("ID", 60),
+            "titulo": ("Título", 220),
+            "isbn": ("ISBN", 150),
+            "anio": ("Año", 70),
+            "stock": ("Stock", 70),
+            "autor": ("Autor", 180),
+            "editorial": ("Editorial", 150),
+            "categoria": ("Categoría", 150)
+        }
+
+        for columna, (texto, ancho) in columnas.items():
+
+            self.tabla.heading(
+                columna,
+                text=texto
+            )
+
+            self.tabla.column(
+                columna,
+                width=ancho,
+                anchor="center"
+            )
+
+        self.tabla.pack(
+            fill="both",
+            expand=True,
+            padx=20,
+            pady=10
+        )
+
+        self.cargar_libros()
+
+    def cargar_libros(self):
+        for fila in self.tabla.get_children():
+            self.tabla.delete(fila)
+
+        libros = obtener_libros()
+
+        for libro in libros:
+            self.tabla.insert(
+                "",
+                "end",
+                values=libro
+            )
